@@ -8,8 +8,14 @@ app.all('*', async (req, res) => {
   const base = req.headers['x-target-base'];
   if (!base) return res.status(400).send('missing target');
 
-  const url = new URL(req.url);
-  const target = base.replace(/\/+$/, '') + url.pathname + url.search;
+  // Use a placeholder base to parse req.url (which has no host)
+  const parsed = new URL(req.url, 'http://localhost');
+  const target = base.replace(/\/+$/, '') + parsed.pathname + parsed.search;
+
+  // Health check
+  if (parsed.pathname === '/health' && req.method === 'GET') {
+    return res.json({ status: 'ok' });
+  }
 
   const headers = { ...req.headers };
   delete headers['x-target-base'];
